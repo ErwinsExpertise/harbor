@@ -135,6 +135,7 @@ func (r *repositoryHandler) sendResponse(w http.ResponseWriter, _ *http.Request,
 	}
 }
 
+// filterByPermission returns repository records filtered by pull permissions unless catalog access is granted.
 func (r *repositoryHandler) filterByPermission(ctx context.Context, repoRecords []*repositorymodel.RepoRecord) []*repositorymodel.RepoRecord {
 	secCtx, ok := security.FromContext(ctx)
 	if !ok || !secCtx.IsAuthenticated() {
@@ -145,7 +146,7 @@ func (r *repositoryHandler) filterByPermission(ctx context.Context, repoRecords 
 		return repoRecords
 	}
 
-	authorizedRepos := make([]*repositorymodel.RepoRecord, 0)
+	authorizedRepos := make([]*repositorymodel.RepoRecord, 0, len(repoRecords))
 	for _, repo := range repoRecords {
 		repoResource := rbac_project.NewNamespace(repo.ProjectID).Resource(rbac.ResourceRepository)
 		if secCtx.Can(ctx, rbac.ActionPull, repoResource) {
