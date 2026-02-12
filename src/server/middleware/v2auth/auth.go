@@ -57,7 +57,7 @@ func (rc *reqChecker) check(req *http.Request) (string, error) {
 		}
 		if a.target == catalog {
 			if !securityCtx.IsAuthenticated() {
-				return getChallenge(req, al), errors.New("unauthorized")
+				return getChallenge(req, al), errors.New("authentication required to list catalog")
 			}
 		}
 		if a.target == repository && req.Header.Get(authHeader) == "" &&

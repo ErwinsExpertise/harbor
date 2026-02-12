@@ -135,7 +135,7 @@ func (r *repositoryHandler) sendResponse(w http.ResponseWriter, _ *http.Request,
 	}
 }
 
-// filterByPermission returns repository records filtered by pull permissions unless catalog access is granted.
+// filterByPermission returns all records for unauthenticated or catalog-authorized users, otherwise filters by pull access.
 func (r *repositoryHandler) filterByPermission(ctx context.Context, repoRecords []*repositorymodel.RepoRecord) []*repositorymodel.RepoRecord {
 	secCtx, ok := security.FromContext(ctx)
 	if !ok || !secCtx.IsAuthenticated() {
