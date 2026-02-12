@@ -205,6 +205,29 @@ func (c *catalogTestSuite) TestCatalogFiltersEmptyWithoutRepoPermission() {
 	c.Empty(ctlg.Repositories)
 }
 
+func (c *catalogTestSuite) TestCatalogReturnsEmptyWithoutSecurityContext() {
+	req := httptest.NewRequest(http.MethodGet, "/v2/_catalog", nil)
+	mock.OnAnything(c.repoMgr, "NonEmptyRepos").Return([]*model.RepoRecord{
+		{
+			RepositoryID: 1,
+			Name:         "project_1/hello-world",
+			ProjectID:    1,
+		},
+	}, nil)
+
+	w := httptest.NewRecorder()
+	newRepositoryHandler().ServeHTTP(w, req)
+	c.Equal(http.StatusOK, w.Code)
+
+	var ctlg struct {
+		Repositories []string `json:"repositories"`
+	}
+	decoder := json.NewDecoder(w.Body)
+	err := decoder.Decode(&ctlg)
+	c.Nil(err)
+	c.Empty(ctlg.Repositories)
+}
+
 func (c *catalogTestSuite) TestCatalogSkipsFilterWithCatalogPermission() {
 	req := httptest.NewRequest(http.MethodGet, "/v2/_catalog", nil)
 	sc := &securitytesting.Context{}
