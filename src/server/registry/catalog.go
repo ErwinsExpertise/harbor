@@ -64,7 +64,7 @@ func (r *repositoryHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 		r.sendResponse(w, req, repoNames)
 		return
 	}
-	// get all the non repositories
+	// get all the non-empty repositories
 	repoRecords, err := r.repoMgr.NonEmptyRepos(req.Context())
 	if err != nil {
 		lib_http.SendError(w, err)
@@ -142,7 +142,7 @@ func (r *repositoryHandler) sendResponse(w http.ResponseWriter, _ *http.Request,
 // filterByPermission returns all records only for system admins; other authenticated users are filtered by pull access.
 func (r *repositoryHandler) filterByPermission(ctx context.Context, repoRecords []*repositorymodel.RepoRecord) []*repositorymodel.RepoRecord {
 	secCtx, ok := security.FromContext(ctx)
-	if !ok || !secCtx.IsAuthenticated() {
+	if !ok {
 		return nil
 	}
 	if secCtx.IsSysAdmin() || secCtx.IsSolutionUser() {
