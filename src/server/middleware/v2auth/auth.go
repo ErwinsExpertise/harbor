@@ -57,9 +57,12 @@ func (rc *reqChecker) check(req *http.Request) (string, error) {
 			return getChallenge(req, al), errors.New("unauthorized")
 		}
 		if a.target == catalog {
+			if !securityCtx.IsAuthenticated() {
+				return getChallenge(req, al), errors.New("unauthorized")
+			}
 			resource := system.NewNamespace().Resource(rbac.ResourceCatalog)
 			if !securityCtx.Can(req.Context(), rbac.ActionRead, resource) {
-				return getChallenge(req, al), fmt.Errorf("unauthorized to list catalog")
+				continue
 			}
 		}
 		if a.target == repository && req.Header.Get(authHeader) == "" &&
