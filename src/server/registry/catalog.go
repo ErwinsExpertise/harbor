@@ -59,6 +59,11 @@ func (r *repositoryHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	}
 
 	repoNames := make([]string, 0)
+	secCtx, ok := security.FromContext(req.Context())
+	if !ok || !secCtx.IsAuthenticated() {
+		r.sendResponse(w, req, repoNames)
+		return
+	}
 	// get all the non repositories
 	repoRecords, err := r.repoMgr.NonEmptyRepos(req.Context())
 	if err != nil {
