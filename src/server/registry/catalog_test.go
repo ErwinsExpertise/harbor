@@ -225,6 +225,7 @@ func (c *catalogTestSuite) TestCatalogReturnsEmptyForUnauthenticatedUser() {
 	err := decoder.Decode(&ctlg)
 	c.Nil(err)
 	c.Empty(ctlg.Repositories)
+	c.repoMgr.AssertCalled(c.T(), "NonEmptyRepos", mock.Anything)
 }
 
 func (c *catalogTestSuite) TestCatalogReturnsAllRepositoriesForSysAdmin() {
