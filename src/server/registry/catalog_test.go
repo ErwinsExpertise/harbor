@@ -206,6 +206,9 @@ func (c *catalogTestSuite) TestCatalogFiltersEmptyWithoutRepoPermission() {
 
 func (c *catalogTestSuite) TestCatalogReturnsEmptyForUnauthenticatedUser() {
 	req := httptest.NewRequest(http.MethodGet, "/v2/_catalog", nil)
+	sc := &securitytesting.Context{}
+	sc.On("IsAuthenticated").Return(false)
+	req = req.WithContext(security.NewContext(context.Background(), sc))
 	mock.OnAnything(c.repoMgr, "NonEmptyRepos").Return([]*model.RepoRecord{
 		{
 			RepositoryID: 1,
@@ -228,7 +231,7 @@ func (c *catalogTestSuite) TestCatalogReturnsEmptyForUnauthenticatedUser() {
 	c.repoMgr.AssertCalled(c.T(), "NonEmptyRepos", mock.Anything)
 }
 
-func (c *catalogTestSuite) TestCatalogReturnsAllRepositoriesForSysAdmin() {
+func (c *catalogTestSuite) TestCatalogSkipsFilteringForSysAdmin() {
 	req := httptest.NewRequest(http.MethodGet, "/v2/_catalog", nil)
 	sc := &securitytesting.Context{}
 	sc.On("IsAuthenticated").Return(true)
