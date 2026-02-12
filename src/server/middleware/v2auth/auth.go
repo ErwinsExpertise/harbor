@@ -41,7 +41,7 @@ const (
 
 type catalogPermissionKey struct{}
 
-// CatalogAuthorized returns the authorization status and whether a value was stored in context.
+// CatalogAuthorized returns (authorized, exists) for the catalog permission flag stored in context.
 func CatalogAuthorized(ctx context.Context) (bool, bool) {
 	authorized, ok := ctx.Value(catalogPermissionKey{}).(bool)
 	return authorized, ok

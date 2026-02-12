@@ -147,7 +147,7 @@ func (r *repositoryHandler) filterByPermission(ctx context.Context, repoRecords 
 			return repoRecords
 		}
 	} else {
-		// Fallback for contexts not populated by the v2 auth middleware (e.g. unit tests).
+		// Fallback for contexts not populated by the v2 auth middleware (e.g., unit tests).
 		resource := system.NewNamespace().Resource(rbac.ResourceCatalog)
 		if secCtx.Can(ctx, rbac.ActionRead, resource) {
 			return repoRecords
