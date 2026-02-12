@@ -24,7 +24,6 @@ import (
 
 	"github.com/goharbor/harbor/src/common/rbac"
 	rbac_project "github.com/goharbor/harbor/src/common/rbac/project"
-	"github.com/goharbor/harbor/src/common/rbac/system"
 	"github.com/goharbor/harbor/src/common/security"
 	"github.com/goharbor/harbor/src/controller/project"
 	"github.com/goharbor/harbor/src/core/service/token"
@@ -38,14 +37,6 @@ import (
 const (
 	authHeader = "Authorization"
 )
-
-type catalogPermissionKey struct{}
-
-// CatalogAuthorized returns (authorized, exists) for the catalog permission flag stored in context.
-func CatalogAuthorized(ctx context.Context) (bool, bool) {
-	authorized, ok := ctx.Value(catalogPermissionKey{}).(bool)
-	return authorized, ok
-}
 
 type reqChecker struct {
 	ctl project.Controller

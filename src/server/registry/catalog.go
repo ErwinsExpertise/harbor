@@ -23,14 +23,12 @@ import (
 
 	"github.com/goharbor/harbor/src/common/rbac"
 	rbac_project "github.com/goharbor/harbor/src/common/rbac/project"
-	"github.com/goharbor/harbor/src/common/rbac/system"
 	"github.com/goharbor/harbor/src/common/security"
 	"github.com/goharbor/harbor/src/lib/errors"
 	lib_http "github.com/goharbor/harbor/src/lib/http"
 	"github.com/goharbor/harbor/src/pkg"
 	"github.com/goharbor/harbor/src/pkg/repository"
 	repositorymodel "github.com/goharbor/harbor/src/pkg/repository/model"
-	"github.com/goharbor/harbor/src/server/middleware/v2auth"
 	"github.com/goharbor/harbor/src/server/registry/util"
 )
 
@@ -136,22 +134,14 @@ func (r *repositoryHandler) sendResponse(w http.ResponseWriter, _ *http.Request,
 	}
 }
 
-// filterByPermission returns records for authenticated users and filters by pull access unless catalog access is granted.
+// filterByPermission returns all records only for system admins; other authenticated users are filtered by pull access.
 func (r *repositoryHandler) filterByPermission(ctx context.Context, repoRecords []*repositorymodel.RepoRecord) []*repositorymodel.RepoRecord {
 	secCtx, ok := security.FromContext(ctx)
 	if !ok || !secCtx.IsAuthenticated() {
 		return []*repositorymodel.RepoRecord{}
 	}
-	if catalogAuthorized, ok := v2auth.CatalogAuthorized(ctx); ok {
-		if catalogAuthorized {
-			return repoRecords
-		}
-	} else {
-		// Fallback for contexts not populated by the v2 auth middleware (e.g., unit tests).
-		resource := system.NewNamespace().Resource(rbac.ResourceCatalog)
-		if secCtx.Can(ctx, rbac.ActionRead, resource) {
-			return repoRecords
-		}
+	if secCtx.IsSysAdmin() || secCtx.IsSolutionUser() {
+		return repoRecords
 	}
 
 	authorizedRepos := make([]*repositorymodel.RepoRecord, 0, len(repoRecords))

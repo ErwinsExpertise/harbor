@@ -25,7 +25,6 @@ import (
 
 	"github.com/goharbor/harbor/src/common/rbac"
 	rbac_project "github.com/goharbor/harbor/src/common/rbac/project"
-	"github.com/goharbor/harbor/src/common/rbac/system"
 	"github.com/goharbor/harbor/src/common/security"
 	"github.com/goharbor/harbor/src/pkg"
 	"github.com/goharbor/harbor/src/pkg/permission/types"
@@ -141,12 +140,10 @@ func (c *catalogTestSuite) TestCatalogFiltersByPermission() {
 	req := httptest.NewRequest(http.MethodGet, "/v2/_catalog", nil)
 	sc := &securitytesting.Context{}
 	sc.On("IsAuthenticated").Return(true)
-	systemCatalogResource := system.NewNamespace().Resource(rbac.ResourceCatalog)
 	project1RepositoryResource := rbac_project.NewNamespace(1).Resource(rbac.ResourceRepository)
+	sc.On("IsSysAdmin").Return(false)
+	sc.On("IsSolutionUser").Return(false)
 	mock.OnAnything(sc, "Can").Return(func(_ context.Context, action types.Action, resource types.Resource) bool {
-		if resource == systemCatalogResource {
-			return false
-		}
 		return resource == project1RepositoryResource && action == rbac.ActionPull
 	})
 	req = req.WithContext(security.NewContext(context.Background(), sc))
@@ -181,6 +178,8 @@ func (c *catalogTestSuite) TestCatalogFiltersEmptyWithoutRepoPermission() {
 	req := httptest.NewRequest(http.MethodGet, "/v2/_catalog", nil)
 	sc := &securitytesting.Context{}
 	sc.On("IsAuthenticated").Return(true)
+	sc.On("IsSysAdmin").Return(false)
+	sc.On("IsSolutionUser").Return(false)
 	mock.OnAnything(sc, "Can").Return(false)
 	req = req.WithContext(security.NewContext(context.Background(), sc))
 
@@ -228,14 +227,12 @@ func (c *catalogTestSuite) TestCatalogReturnsEmptyWithoutSecurityContext() {
 	c.Empty(ctlg.Repositories)
 }
 
-func (c *catalogTestSuite) TestCatalogSkipsFilterWithCatalogPermission() {
+func (c *catalogTestSuite) TestCatalogSkipsFilterForSysAdmin() {
 	req := httptest.NewRequest(http.MethodGet, "/v2/_catalog", nil)
 	sc := &securitytesting.Context{}
 	sc.On("IsAuthenticated").Return(true)
-	systemCatalogResource := system.NewNamespace().Resource(rbac.ResourceCatalog)
-	mock.OnAnything(sc, "Can").Return(func(_ context.Context, _ types.Action, resource types.Resource) bool {
-		return resource == systemCatalogResource
-	})
+	sc.On("IsSysAdmin").Return(true)
+	sc.On("IsSolutionUser").Return(false)
 	req = req.WithContext(security.NewContext(context.Background(), sc))
 
 	mock.OnAnything(c.repoMgr, "NonEmptyRepos").Return([]*model.RepoRecord{
