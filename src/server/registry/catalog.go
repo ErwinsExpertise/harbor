@@ -138,7 +138,7 @@ func (r *repositoryHandler) sendResponse(w http.ResponseWriter, _ *http.Request,
 func (r *repositoryHandler) filterByPermission(ctx context.Context, repoRecords []*repositorymodel.RepoRecord) []*repositorymodel.RepoRecord {
 	secCtx, ok := security.FromContext(ctx)
 	if !ok || !secCtx.IsAuthenticated() {
-		return []*repositorymodel.RepoRecord{}
+		return nil
 	}
 	if secCtx.IsSysAdmin() || secCtx.IsSolutionUser() {
 		return repoRecords
