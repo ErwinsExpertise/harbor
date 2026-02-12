@@ -24,7 +24,6 @@ import (
 
 	"github.com/goharbor/harbor/src/common/rbac"
 	rbac_project "github.com/goharbor/harbor/src/common/rbac/project"
-	"github.com/goharbor/harbor/src/common/rbac/system"
 	"github.com/goharbor/harbor/src/common/security"
 	"github.com/goharbor/harbor/src/controller/project"
 	"github.com/goharbor/harbor/src/core/service/token"
@@ -57,9 +56,8 @@ func (rc *reqChecker) check(req *http.Request) (string, error) {
 			return getChallenge(req, al), errors.New("unauthorized")
 		}
 		if a.target == catalog {
-			resource := system.NewNamespace().Resource(rbac.ResourceCatalog)
-			if !securityCtx.Can(req.Context(), rbac.ActionRead, resource) {
-				return getChallenge(req, al), fmt.Errorf("unauthorized to list catalog")
+			if !securityCtx.IsAuthenticated() {
+				return getChallenge(req, al), errors.New("authentication required to list catalog")
 			}
 		}
 		if a.target == repository && req.Header.Get(authHeader) == "" &&
