@@ -24,6 +24,7 @@ import (
 
 	"github.com/goharbor/harbor/src/common/rbac"
 	rbac_project "github.com/goharbor/harbor/src/common/rbac/project"
+	"github.com/goharbor/harbor/src/common/rbac/system"
 	"github.com/goharbor/harbor/src/common/security"
 	"github.com/goharbor/harbor/src/controller/project"
 	"github.com/goharbor/harbor/src/core/service/token"
@@ -37,6 +38,14 @@ import (
 const (
 	authHeader = "Authorization"
 )
+
+type catalogPermissionKey struct{}
+
+// CatalogAuthorized returns whether the current request has catalog read permission.
+func CatalogAuthorized(ctx context.Context) (bool, bool) {
+	authorized, ok := ctx.Value(catalogPermissionKey{}).(bool)
+	return authorized, ok
+}
 
 type reqChecker struct {
 	ctl project.Controller
@@ -59,6 +68,9 @@ func (rc *reqChecker) check(req *http.Request) (string, error) {
 			if !securityCtx.IsAuthenticated() {
 				return getChallenge(req, al), errors.New("authentication required to list catalog")
 			}
+			resource := system.NewNamespace().Resource(rbac.ResourceCatalog)
+			authorized := securityCtx.Can(req.Context(), rbac.ActionRead, resource)
+			*req = *req.WithContext(context.WithValue(req.Context(), catalogPermissionKey{}, authorized))
 		}
 		if a.target == repository && req.Header.Get(authHeader) == "" &&
 			(req.Method == http.MethodHead || req.Method == http.MethodGet) { // make sure 401 is returned for CLI HEAD, see #11271

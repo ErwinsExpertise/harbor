@@ -30,6 +30,7 @@ import (
 	"github.com/goharbor/harbor/src/pkg"
 	"github.com/goharbor/harbor/src/pkg/repository"
 	repositorymodel "github.com/goharbor/harbor/src/pkg/repository/model"
+	"github.com/goharbor/harbor/src/server/middleware/v2auth"
 	"github.com/goharbor/harbor/src/server/registry/util"
 )
 
@@ -141,9 +142,15 @@ func (r *repositoryHandler) filterByPermission(ctx context.Context, repoRecords 
 	if !ok || !secCtx.IsAuthenticated() {
 		return repoRecords
 	}
-	resource := system.NewNamespace().Resource(rbac.ResourceCatalog)
-	if secCtx.Can(ctx, rbac.ActionRead, resource) {
-		return repoRecords
+	if catalogAuthorized, ok := v2auth.CatalogAuthorized(ctx); ok {
+		if catalogAuthorized {
+			return repoRecords
+		}
+	} else {
+		resource := system.NewNamespace().Resource(rbac.ResourceCatalog)
+		if secCtx.Can(ctx, rbac.ActionRead, resource) {
+			return repoRecords
+		}
 	}
 
 	authorizedRepos := make([]*repositorymodel.RepoRecord, 0, len(repoRecords))
