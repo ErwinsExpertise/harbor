@@ -145,7 +145,7 @@ func (r *repositoryHandler) filterByPermission(ctx context.Context, repoRecords 
 		return repoRecords
 	}
 
-	authorizedRepos := make([]*repositorymodel.RepoRecord, 0, len(repoRecords))
+	authorizedRepos := make([]*repositorymodel.RepoRecord, 0)
 	for _, repo := range repoRecords {
 		repoResource := rbac_project.NewNamespace(repo.ProjectID).Resource(rbac.ResourceRepository)
 		if secCtx.Can(ctx, rbac.ActionPull, repoResource) {
